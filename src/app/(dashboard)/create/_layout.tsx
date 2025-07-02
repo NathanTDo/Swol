@@ -9,7 +9,10 @@ export default function CreateLayout() {
         },
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Create" }} />
+      <Stack.Screen
+        name="index"
+        options={{ title: "Create", headerShown: false }}
+      />
     </Stack>
   );
 }

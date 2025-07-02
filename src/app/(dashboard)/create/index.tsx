@@ -3,15 +3,18 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   ActivityIndicator,
-  ScrollView,
   Alert,
-  TouchableOpacity,
+  SafeAreaView,
+  StyleSheet,
+  Pressable,
+  ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../providers/AuthProvider";
 import { UserProfile, WorkoutPlan } from "../../../types";
+import { Button, ButtonText } from "../../../components/Button";
 
 export default function Create() {
   const { user } = useAuth();
@@ -31,34 +34,29 @@ export default function Create() {
     setPlan(null);
 
     try {
-      // 1. Fetch the user's profile for personalization
       if (!user) throw new Error("You must be logged in to create a plan.");
 
-      const { data: user_profile, error: profileError } = await supabase
+      const { data: user_profile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single<UserProfile>();
 
-      if (profileError || !user_profile) {
+      if (!user_profile) {
         throw new Error(
           "Could not fetch your profile. Please complete it before generating a plan."
         );
       }
 
-      // 2. Call the new edge function
       const { data, error: functionError } = await supabase.functions.invoke(
         "create-workout-plan",
-        {
-          body: { user_prompt: prompt, user_profile },
-        }
+        { body: { user_prompt: prompt, user_profile } }
       );
 
       if (functionError) throw functionError;
 
-      // The function returns the plan_data part of the WorkoutPlan
       const newPlan: WorkoutPlan = {
-        id: "", // Will be generated on save
+        id: "",
         user_id: user.id,
         user_prompt: prompt,
         plan_data: data,
@@ -86,11 +84,8 @@ export default function Create() {
 
       if (error) throw error;
 
-      Alert.alert(
-        "Success",
-        "Your workout plan has been saved to your history!"
-      );
-      setPlan(null); // Clear the plan after saving
+      Alert.alert("Success", "Your workout plan has been saved!");
+      setPlan(null);
       setPrompt("");
     } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to save the plan.");
@@ -98,68 +93,64 @@ export default function Create() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 p-6">
-      <View className="space-y-6">
-        <Text className="text-3xl font-bold text-gray-800">
-          Create Your Workout Plan
-        </Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.mainContent}>
+        <Text style={styles.title}>Create Your Workout Plan</Text>
 
-        <TextInput
-          className="bg-white p-4 border border-gray-300 rounded-lg text-lg"
-          placeholder="e.g., A 3-day plan to build muscle at home"
-          value={prompt}
-          onChangeText={setPrompt}
-          multiline
-        />
+        <View style={styles.promptContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., A 3-day plan to build muscle at home"
+            value={prompt}
+            onChangeText={setPrompt}
+            multiline
+          />
+          <Pressable
+            onPress={generatePlan}
+            disabled={loading}
+            style={({ pressed }) => [
+              styles.submitButton,
+              (pressed || loading) && styles.buttonDisabled,
+            ]}
+          >
+            <Ionicons name="arrow-forward-circle" size={44} color="#2563EB" />
+          </Pressable>
+        </View>
 
-        <TouchableOpacity
-          className={`py-3 px-4 rounded-lg ${loading ? "bg-gray-400" : "bg-blue-600"}`}
-          onPress={generatePlan}
-          disabled={loading}
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            {loading ? "Generating Your Plan..." : "Generate Plan"}
-          </Text>
-        </TouchableOpacity>
+        {loading && <ActivityIndicator size="large" color="#2563EB" />}
 
-        {loading && (
-          <ActivityIndicator size="large" color="#3B82F6" className="my-4" />
-        )}
-        {error && <Text className="text-red-500 text-center">{error}</Text>}
+        {error && <Text style={styles.errorText}>{error}</Text>}
 
         {plan && (
-          <View className="mt-6 space-y-4 bg-white p-4 rounded-lg shadow-md">
-            <Text className="text-2xl font-bold text-gray-800">
-              Your New Plan
-            </Text>
+          <View style={styles.planContainer}>
+            <Text style={styles.planTitle}>Your New Plan</Text>
             {plan.plan_data.daily_workouts.map((dailyWorkout, index) => (
-              <View
-                key={index}
-                className="p-4 border border-gray-200 rounded-lg"
-              >
-                <Text className="text-xl font-semibold text-gray-700">{`Day ${dailyWorkout.day}: ${dailyWorkout.title}`}</Text>
-                <View className="mt-2 space-y-2">
+              <View key={index} style={styles.dayContainer}>
+                <Text
+                  style={styles.dayTitle}
+                >{`Day ${dailyWorkout.day}: ${dailyWorkout.title}`}</Text>
+                <View style={styles.exercisesContainer}>
                   {dailyWorkout.exercises.map((exercise, exIndex) => (
-                    <View key={exIndex} className="p-3 bg-gray-50 rounded-md">
-                      <Text className="text-lg font-bold">{exercise.name}</Text>
-                      <Text className="capitalize text-gray-600">
+                    <View key={exIndex} style={styles.exerciseCard}>
+                      <Text style={styles.exerciseName}>{exercise.name}</Text>
+                      <Text style={styles.exerciseDetails}>
                         {exercise.muscle_group} • {exercise.equipment}
                       </Text>
-                      <Text className="mt-1 text-gray-500">
+                      <Text style={styles.exerciseInstructions}>
                         {exercise.instructions}
                       </Text>
-                      <View className="flex-row justify-between mt-2">
-                        <Text>
-                          <Text className="font-bold">Sets:</Text>{" "}
+                      <View style={styles.statsContainer}>
+                        <Text style={styles.stat}>
+                          <Text style={styles.statLabel}>Sets:</Text>{" "}
                           {exercise.sets}
                         </Text>
-                        <Text>
-                          <Text className="font-bold">Reps:</Text>{" "}
+                        <Text style={styles.stat}>
+                          <Text style={styles.statLabel}>Reps:</Text>{" "}
                           {exercise.reps}
                         </Text>
                         {exercise.duration_seconds && (
-                          <Text>
-                            <Text className="font-bold">Time:</Text>{" "}
+                          <Text style={styles.stat}>
+                            <Text style={styles.statLabel}>Time:</Text>{" "}
                             {exercise.duration_seconds}s
                           </Text>
                         )}
@@ -169,10 +160,89 @@ export default function Create() {
                 </View>
               </View>
             ))}
-            <Button title="Save Plan to History" onPress={savePlan} />
+            <Button style={styles.button} onPress={savePlan}>
+              <ButtonText style={styles.buttonText}>
+                Save Plan to History
+              </ButtonText>
+            </Button>
           </View>
         )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F4F3EE" },
+  mainContent: { padding: 24, gap: 16 },
+  title: { fontSize: 28, fontWeight: "bold", color: "#1F2937" },
+  promptContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "white",
+    borderColor: "#E5E7EB",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    lineHeight: 20,
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+  submitButton: {
+    height: 48,
+    width: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonDisabled: { opacity: 0.5 },
+  errorText: { color: "red", textAlign: "center" },
+  planContainer: {
+    gap: 16,
+    backgroundColor: "#F4F3EE",
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  planTitle: { fontSize: 22, fontWeight: "bold", color: "#1F2937" },
+  dayContainer: {
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+    borderRadius: 8,
+    padding: 12,
+  },
+  dayTitle: { fontSize: 20, fontWeight: "600", color: "#374151" },
+  exercisesContainer: { gap: 12 },
+  exerciseCard: {
+    gap: 4,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 6,
+    padding: 12,
+  },
+  exerciseName: { fontSize: 18, fontWeight: "bold" },
+  exerciseDetails: { textTransform: "capitalize", color: "#6B7280" },
+  exerciseInstructions: { color: "#4B5563" },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  stat: { fontSize: 14 },
+  statLabel: { fontWeight: "bold" },
+  button: {
+    backgroundColor: "#2563EB",
+    padding: 12,
+    borderRadius: 100,
+    alignItems: "center",
+  },
+  buttonText: { color: "white", fontWeight: "600", fontSize: 16 },
+});

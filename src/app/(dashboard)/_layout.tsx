@@ -49,6 +49,7 @@ const TabsLayout = () => {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="add-circle" size={size} color={color} />
             ),
+            headerShown: false,
           }}
         />
         <Tabs.Screen
