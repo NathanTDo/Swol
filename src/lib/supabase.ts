@@ -61,9 +61,14 @@ class LargeSecureStore {
   }
 }
 
-const supabaseUrl = "https://ekccqtglnycclqabndfa.supabase.co";
-const supabaseAnonKey =
-  "***REDACTED*** ";
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Supabase URL and Anon Key must be provided in .env file. Please ensure .env is in the root and you have restarted your app."
+  );
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

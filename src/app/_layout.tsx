@@ -1,15 +1,18 @@
 import { Stack } from "expo-router";
+import { AuthProvider } from "../providers/AuthProvider";
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        contentStyle: {
-          backgroundColor: "#F4F3EE",
-        },
-      }}
-    >
-      <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
-    </Stack>
+    <AuthProvider>
+      <Stack
+        screenOptions={{
+          contentStyle: {
+            backgroundColor: "#F4F3EE",
+          },
+        }}
+      >
+        <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
+      </Stack>
+    </AuthProvider>
   );
 }
