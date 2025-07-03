@@ -1,8 +1,18 @@
-import { View, Text, TextInput, Button, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { UserProfile } from "../../../types";
 import { useAuth } from "../../../providers/AuthProvider"; // Assuming you have an AuthProvider
+import { Checkbox } from "../../../components/Checkbox";
+import { Label } from "../../../components/Label";
 
 // Mock data for selectors - in a real app, this might come from a config file
 const fitnessLevels = ["beginner", "intermediate", "advanced"];
@@ -113,17 +123,11 @@ export default function Profile() {
   return (
     <ScrollView className="flex-1 p-6 bg-gray-50">
       <View className="space-y-4 mb-6">
-        <Text className="text-2xl font-bold text-gray-800">Your Profile</Text>
-        <Text className="text-gray-600">
-          This information helps in creating a personalized workout plan for
-          you.
-        </Text>
+        <Text style={styles.header}>Your Profile</Text>
 
         {/* --- Personal Details --- */}
         <View className="space-y-2">
-          <Text className="text-lg font-semibold text-gray-700">
-            Personal Details
-          </Text>
+          <Text style={styles.title}>Personal Details</Text>
           <TextInput
             className="bg-white p-3 border border-gray-300 rounded-md"
             placeholder="Age"
@@ -155,9 +159,7 @@ export default function Profile() {
 
         {/* --- Fitness Level --- */}
         <View className="space-y-2">
-          <Text className="text-lg font-semibold text-gray-700">
-            Fitness Level
-          </Text>
+          <Text style={styles.title}>Fitness Level</Text>
           <View className="flex-row flex-wrap gap-2">
             {fitnessLevels.map((level) => (
               <Text
@@ -175,38 +177,46 @@ export default function Profile() {
 
         {/* --- Fitness Goals --- */}
         <View className="space-y-2">
-          <Text className="text-lg font-semibold text-gray-700">
-            Fitness Goals (select multiple)
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
+          <Text style={styles.title}>Fitness Goals (select multiple)</Text>
+          <View className="gap-2">
             {fitnessGoals.map((goal) => (
-              <Text
+              <Label
                 key={goal}
+                className="flex-row items-center gap-2"
                 onPress={() => toggleSelection("fitness_goals", goal)}
-                className={`px-4 py-2 rounded-full ${profile.fitness_goals?.includes(goal) ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}
               >
-                {goal}
-              </Text>
+                <Checkbox
+                  id={goal}
+                  checked={!!profile.fitness_goals?.includes(goal)}
+                  onCheckedChange={() => {}} // Press is handled by Label
+                />
+                <Text className="text-lg">{goal}</Text>
+              </Label>
             ))}
           </View>
         </View>
 
         {/* --- Available Equipment --- */}
         <View className="space-y-2">
-          <Text className="text-lg font-semibold text-gray-700">
+          <Text style={styles.title}>
             Available Equipment (select multiple)
           </Text>
-          <View className="flex-row flex-wrap gap-2">
+          <View className="gap-2">
             {equipmentOptions.map((equipment) => (
-              <Text
+              <Label
                 key={equipment}
+                className="flex-row items-center gap-2"
                 onPress={() =>
                   toggleSelection("available_equipment", equipment)
                 }
-                className={`px-4 py-2 rounded-full ${profile.available_equipment?.includes(equipment) ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}
               >
-                {equipment}
-              </Text>
+                <Checkbox
+                  id={equipment}
+                  checked={!!profile.available_equipment?.includes(equipment)}
+                  onCheckedChange={() => {}} // Press is handled by Label
+                />
+                <Text className="text-lg">{equipment}</Text>
+              </Label>
             ))}
           </View>
         </View>
@@ -220,3 +230,20 @@ export default function Profile() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F4F3EE" },
+  mainContent: {
+    padding: 24,
+    gap: 16,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 20,
+    marginBottom: 12,
+  },
+});
