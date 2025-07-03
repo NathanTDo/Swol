@@ -53,6 +53,16 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
+          name="history"
+          options={{
+            title: "History",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="list" size={size} color={color} />
+            ),
+            headerShown: false,
+          }}
+        />
+        <Tabs.Screen
           name="profile"
           options={{
             title: "Profile",
