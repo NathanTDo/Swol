@@ -34,13 +34,16 @@ create policy "Users can update their own profile." on profiles for update using
 create table workout_plans (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) not null,
+  plan_name text not null,
   user_prompt text not null,
   plan_data jsonb not null,
   created_at timestamp with time zone default now() not null
 );
 
 -- Add comments to the columns for clarity
+comment on column workout_plans.id is 'Unique identifier for the workout plan.';
 comment on column workout_plans.user_id is 'The user who this workout plan belongs to.';
+comment on column workout_plans.plan_name is 'The name given to the workout plan by the user.';
 comment on column workout_plans.user_prompt is 'The prompt the user submitted to generate the plan.';
 comment on column workout_plans.plan_data is 'The generated workout plan data.';
 

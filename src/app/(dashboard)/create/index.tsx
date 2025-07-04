@@ -20,6 +20,7 @@ export default function Create() {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
+  const [planName, setPlanName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,6 +33,7 @@ export default function Create() {
     setLoading(true);
     setError("");
     setPlan(null);
+    setPlanName("");
 
     try {
       if (!user) throw new Error("You must be logged in to create a plan.");
@@ -73,11 +75,15 @@ export default function Create() {
   };
 
   const savePlan = async () => {
-    if (!plan) return;
+    if (!plan || !planName) {
+      Alert.alert("Error", "Please enter a name for your plan.");
+      return;
+    }
 
     try {
       const { error } = await supabase.from("workout_plans").insert({
         user_id: plan.user_id,
+        plan_name: planName,
         user_prompt: plan.user_prompt,
         plan_data: plan.plan_data,
       });
@@ -86,6 +92,7 @@ export default function Create() {
 
       Alert.alert("Success", "Your workout plan has been saved!");
       setPlan(null);
+      setPlanName("");
       setPrompt("");
     } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to save the plan.");
@@ -160,7 +167,18 @@ export default function Create() {
                 </View>
               </View>
             ))}
-            <Button style={styles.button} onPress={savePlan}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter a name for your plan..."
+              value={planName}
+              onChangeText={setPlanName}
+              className="mt-4 bg-white"
+            />
+            <Button
+              style={[styles.button, !planName && styles.buttonDisabled]}
+              onPress={savePlan}
+              disabled={!planName}
+            >
               <ButtonText style={styles.buttonText}>
                 Save Plan to History
               </ButtonText>
